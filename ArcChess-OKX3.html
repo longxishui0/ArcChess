@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Arc Chess - OKX 钱包测试</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.min.js"></script>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #1e1e1e; 
+      color: #eee; 
+      text-align: center; 
+      padding: 40px; 
+      line-height: 1.8;
+    }
+    button { 
+      padding: 15px 30px; 
+      font-size: 18px; 
+      margin: 20px; 
+      background: #00aaee; 
+      color: white; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+    }
+    #status { 
+      font-size: 18px; 
+      margin: 30px; 
+      padding: 20px;
+      background: #333;
+      border-radius: 10px;
+      min-height: 140px;
+    }
+    .success { color: #00ffaa; }
+    .error { color: #ff6666; }
+  </style>
+</head>
+<body>
+  <h1>Arc Chess - OKX 钱包测试</h1>
+  <p>合约地址：<br><small>0xb73fd77252d5a54B718340d04e018D4219DfA05F</small></p>
+  
+  <button onclick="connectWallet()">连接 OKX 钱包</button>
+  
+  <div id="status">点击按钮进行连接测试</div>
+
+  <script>
+    async function connectWallet() {
+      const status = document.getElementById("status");
+
+      // 优先检测 OKX 专用注入，如果没有则用通用 ethereum
+      let providerObj = window.okxwallet || window.ethereum;
+
+      if (!providerObj) {
+        status.innerHTML = `<span class="error">❌ 未检测到任何钱包注入</span><br><br>
+          请确认：<br>
+          1. OKX 钱包插件已安装并**启用**<br>
+          2. OKX 钱包已**解锁**（打开钱包界面）<br>
+          3. 刷新页面或重启浏览器后再试`;
+        return;
+      }
+
+      try {
+        status.innerHTML = "正在请求连接... 请在 OKX 钱包中确认";
+
+        const provider = new ethers.BrowserProvider(providerObj);
+        await provider.send("eth_requestAccounts", []);   // 弹出连接请求
+
+        const signer = await provider.getSigner();
+        const address = await signer.getAddress();
+
+        status.innerHTML = `<span class="success">✅ 连接成功！</span><br><br>
+          钱包地址：<br>${address}<br><br>
+          你现在可以使用这个钱包进行交易了。`;
+
+        alert("OKX 钱包连接成功！");
+        
+      } catch (error) {
+        console.error(error);
+        status.innerHTML = `<span class="error">❌ 连接失败</span><br>${error.message || error}`;
+      }
+    }
+  </script>
+</body>
+</html>
